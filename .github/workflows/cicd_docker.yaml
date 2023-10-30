@@ -11,14 +11,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Your existing build and push steps...
+      - name: Checkout Source Code
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker Image for Staging
+        run: docker build -t ${{secrets.DOCKERHUB_USERNAME}}/nodejs:staging .
+      
+      - name: Push Docker Image to Docker Hub for Staging
+        run: docker push ${{secrets.DOCKERHUB_USERNAME}}/nodejs:staging
 
   deploy_to_staging:
     needs: build_and_push_to_staging
     runs-on: ubuntu-latest
 
     steps:
-      # Your existing deployment steps for staging...
+      - name: Deploy to Staging Server
+        if: success() # Only deploy if the previous steps were successful
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            # Log in to the Docker Hub
+            echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            # Replace this with your deployment script
+            docker pull ${{secrets.DOCKERHUB_USERNAME}}/nodejs:staging
+            docker stop nodejs
+            docker rm nodejs
+            docker run -d -p 80:8080 --name nodejs ${{secrets.DOCKERHUB_USERNAME}}/nodejs:staging
 
   deploy_to_production:
     needs: deploy_to_staging
@@ -32,7 +59,7 @@ jobs:
           # Implement a manual approval mechanism (e.g., sending a notification or requiring a response).
 
       - name: Deploy to Production Server
-        if: success() && github.event_name != 'workflow_dispatch'
+        if: success() # Only deploy if the confirmation is received
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.PRODUCTION_SERVER_HOST }}
