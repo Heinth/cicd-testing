@@ -6,6 +6,9 @@ on:
       name: 
         description: "Who to greet"
         default: "World"
+  push:
+    branches:
+      - main
 
 jobs:
   build_and_push_to_staging:
