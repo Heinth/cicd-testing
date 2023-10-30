@@ -23,7 +23,7 @@ jobs:
         run: docker build -t kevin/nodejs .
       
       - name: Push update image to Dockerhub
-        run: docker push kevin/nodejs
+        run: docker push ${{secrets.DOCKERHUB_USERNAME}}/nodejs
 
       - name: SSH Deploy to Server
         if: success() # Only deploy if the previous steps were successful
