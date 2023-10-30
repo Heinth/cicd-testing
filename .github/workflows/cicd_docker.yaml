@@ -59,7 +59,7 @@ jobs:
           # Implement a manual approval mechanism (e.g., sending a notification or requiring a response).
 
       - name: Deploy to Production Server
-        if: success() # Only deploy if the confirmation is received
+        if: success() && github.event_name != 'workflow_dispatch'
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.PRODUCTION_SERVER_HOST }}
