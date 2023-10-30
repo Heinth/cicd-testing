@@ -5,6 +5,10 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      name: 
+        description: "Who to greet"
+        default: "World"
 
 jobs:
   build_and_push_to_staging:
